@@ -44,15 +44,19 @@ public_users.get('/isbn/:isbn', (req, res) => {
 
 // Get book details based on author
 public_users.get('/author/:author', (req, res) => {
-    const author = req.params.author; // Extract author from request parameters
+    const author = req.params.author; // Extract the author from request parameters
 
     // Filter books by the given author
-    const filteredBooks = Object.values(books).filter(book => book.author === author);
+    const filteredBooks = Object.keys(books).filter(isbn => books[isbn].author === author).map(isbn => ({
+        isbn,
+        title: books[isbn].title,
+        reviews: books[isbn].reviews
+    }));
 
     if (filteredBooks.length > 0) {
-        return res.status(200).json(filteredBooks); // Send the filtered books as response
+        return res.status(200).json({ booksByAuthor: filteredBooks }); // Send books filtered by author
     } else {
-        return res.status(404).json({ message: "No books found by this author" });
+        return res.status(404).json({ message: "No books found by this author" }); // Author not found
     }
 });
 
@@ -61,16 +65,20 @@ public_users.get('/title/:title', (req, res) => {
     const title = req.params.title; // Extract title from request parameters
 
     // Filter books by the given title
-    const filteredBooks = Object.values(books).filter(book => book.title === title);
+    const filteredBooks = Object.keys(books).filter(isbn => books[isbn].title === title).map(isbn => ({
+        isbn,
+        author: books[isbn].author,
+        reviews: books[isbn].reviews
+    }));
 
     if (filteredBooks.length > 0) {
-        return res.status(200).json(filteredBooks); // Send the filtered books as response
+        return res.status(200).json({ booksByTitle: filteredBooks }); // Send books filtered by title
     } else {
         return res.status(404).json({ message: "No books found with this title" });
     }
 });
 
-// Get book review
+// Get book reviews
 public_users.get('/review/:isbn', (req, res) => {
     const isbn = req.params.isbn; // Extract ISBN from request parameters
 
