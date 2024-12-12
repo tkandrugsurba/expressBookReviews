@@ -78,7 +78,7 @@ public_users.get('/title/:title', (req, res) => {
     }
 });
 
-// Get book reviews
+// Get book reviews based on ISBN
 public_users.get('/review/:isbn', (req, res) => {
     const isbn = req.params.isbn; // Extract ISBN from request parameters
 
