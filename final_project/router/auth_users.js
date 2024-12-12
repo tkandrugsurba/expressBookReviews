@@ -20,41 +20,44 @@ const authenticatedUser = (username, password) => {
 regd_users.post("/login", (req, res) => {
     const { username, password } = req.body;
 
-    // Check if username and password are provided
     if (!username || !password) {
         return res.status(400).json({ message: "Username and password are required" });
     }
 
-    // Validate if the username exists
-    if (!isValid(username)) {
+    if (!isValid(username) || !authenticatedUser(username, password)) {
         return res.status(401).json({ message: "Invalid username or password" });
     }
 
-    // Authenticate the user
-    if (!authenticatedUser(username, password)) {
-        return res.status(401).json({ message: "Invalid username or password" });
-    }
-
-    // Generate a JWT token
     const token = jwt.sign({ username }, "fingerprint_customer", { expiresIn: '1h' });
-
-    // Return the token
     return res.status(200).json({ message: "Login successful", token });
 });
 
-// Add a book review
+// Add or modify a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
     const isbn = req.params.isbn;
     const review = req.body.review;
-    const username = req.user.username; // Assumes the username is attached to the request after authentication
 
+    // Check if the book exists
     if (!books[isbn]) {
         return res.status(404).json({ message: "Book not found" });
     }
 
-    // Add or update the review
-    books[isbn].reviews[username] = review;
-    return res.status(200).json({ message: "Review added/updated successfully" });
+    // Extract the username from the token
+    const token = req.headers.authorization;
+    if (!token) {
+        return res.status(401).json({ message: "Unauthorized: Token is missing" });
+    }
+
+    try {
+        const decoded = jwt.verify(token, "fingerprint_customer");
+        const username = decoded.username;
+
+        // Add or update the review
+        books[isbn].reviews[username] = review;
+        return res.status(200).json({ message: "Review added/updated successfully", reviews: books[isbn].reviews });
+    } catch (err) {
+        return res.status(403).json({ message: "Invalid or expired token" });
+    }
 });
 
 module.exports.authenticated = regd_users;
