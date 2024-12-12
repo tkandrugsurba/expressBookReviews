@@ -14,26 +14,21 @@ const app = express();
 app.use(express.json());
 
 // Middleware to initialize session for routes under "/customer" path
-app.use("/customer", session({secret:"fingerprint_customer",resave: true, saveUninitialized: true}));
+app.use("/customer", session({ secret: "fingerprint_customer", resave: true, saveUninitialized: true }));
 
 // Middleware for authentication for routes under "/customer/auth/*" path
-app.use("/customer/auth/*", function auth(req, res, next){
-    // Get the JWT token from the request header or query parameter
+app.use("/customer/auth/*", function auth(req, res, next) {
     const token = req.headers.authorization; // Assuming token is passed in the Authorization header
-    
-    // Check if token is provided
+
     if (!token) {
         return res.status(401).json({ message: "Unauthorized: Token is missing" });
     }
 
     try {
-        // Verify the token
-        const decoded = jwt.verify(token, "your_secret_key"); // Replace "your_secret_key" with your actual secret key
-
-        // Token is valid, proceed to the next middleware or route handler
-        next();
+        const decoded = jwt.verify(token, "fingerprint_customer"); // Verify token using the secret key
+        req.user = decoded; // Attach decoded token to request object
+        next(); // Proceed to the next middleware or route handler
     } catch (error) {
-        // Token is invalid or expired
         return res.status(401).json({ message: "Unauthorized: Invalid token" });
     }
 });
